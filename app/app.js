@@ -1,16 +1,29 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var wkhtmltopdf = require('wkhtmltopdf');
+const express = require('express');
+const bodyParser = require('body-parser');
+const wkhtmltopdf = require('wkhtmltopdf');
 
-var app = express();
+const app = express();
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}))
 
-app.post('/', (req, res) => {
-  res.setHeader('content-type', 'application/pdf');
-  wkhtmltopdf(req.body.content, req.body.options).pipe(res);
+app.get('/status', (req, res) => {
+    res.send("OK")
+});
+
+app.post('/', (req, res, next) => {
+    try {
+        let filename = req.query.name || 'Report'
+        res.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-disposition': `attachment;filename=${filename}.pdf`,
+        });
+        wkhtmltopdf(req.body.content, req.body.options).pipe(res);
+    } catch (error) {
+        next(error)
+    }
 });
 
 app.listen(8080, function () {
-  console.log('App listening on port 8080');
+    console.log('App listening on port 8080');
 });
